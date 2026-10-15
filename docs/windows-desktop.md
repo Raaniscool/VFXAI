@@ -2,32 +2,35 @@
 
 ## Current delivery status (read first)
 
-The Electron source conversion and Windows packaging configuration are implemented. **There is no compiled Windows installer or portable `.exe` available yet.** Arena's local runtime and package downloads were blocked, and the first published Windows Actions run failed during real Electron startup before packaging. No Windows installer/portable artifact was produced; Windows installation and GPU behavior are not verified.
+A Windows x64 installer and portable application have now been **built and passed real-Electron smoke tests on a Windows GitHub runner**. Download the **`VFXAI-Windows-x64`** artifact from the [successful run](https://github.com/Raaniscool/VFXAI/actions/runs/38688547095). The [direct artifact ZIP link](https://api.github.com/repos/Raaniscool/VFXAI/actions/artifacts/11951170634/zip) may ask you to sign in to GitHub. It is about 212 MiB and retained for 30 days. This is a CI artifact, not a permanent GitHub Release.
 
-The **`VFXAI-0.2.0-source.zip` is complete source, not an installed application**. Extract it first. The source is published on [the Arena branch](https://github.com/Raaniscool/VFXAI/tree/arena/8b465cbe-vfxai). The failed [Windows Actions run](https://github.com/Raaniscool/VFXAI/actions/runs/38687347082) did not publish a download artifact. The source can still be built on Windows using the steps below.
+The source is published on [the Arena branch](https://github.com/Raaniscool/VFXAI/tree/arena/8b465cbe-vfxai). The automated Windows run launched both the source entry and packaged executable, checked the bundled UI/WebGL effect and plan operations, built the installer/portable targets, and tested the packaged `.exe`. **It has not been manually installed and checked on your own PC**; native dialogs, installation/uninstallation, and local graphics/performance still need user-machine checks.
 
-## Simplest way to get a real Windows program from source
+## Simplest way to launch the prebuilt app
 
-Use a **Windows 10/11 x64 PC** with Internet access, enough free disk space for Node dependencies and Electron, and working graphics drivers. These are the configured targets, not a claim that Windows execution was verified in Arena.
+1. Open the [successful Windows desktop run](https://github.com/Raaniscool/VFXAI/actions/runs/38688547095) and download **Artifacts → `VFXAI-Windows-x64`**. Sign in to GitHub if prompted.
+2. In your Downloads folder, right-click the ZIP and choose **Extract All**.
+3. For the quickest launch, double-click **`VFXAI-0.2.0-x64-portable.exe`**. Or run **`VFXAI-0.2.0-x64-setup.exe`** and follow the wizard; after setup, start **VFXAI** from the Start menu or desktop shortcut.
 
-1. Install **Node.js 22.12 or newer** (a current LTS is recommended). Node includes npm. Close and reopen any existing terminals after installing it.
-2. Extract `VFXAI-0.2.0-source.zip` into a normal writable folder, such as `Documents\VFXAI`. Do not launch files from inside the ZIP. Avoid a protected `Program Files` source directory.
-3. Double-click **`BUILD_WINDOWS.bat`** in that folder.
-4. Wait for dependencies, tests, Vite, and electron-builder to finish. Initial builds download Electron and packaging tools from the Internet; they are much larger than the VFX source. Leave the console open and read any error if it stops.
-5. On success, the launcher opens the **`release`** folder containing:
+The portable build does not need installation. Neither prebuilt app needs Node.js, a separate web server, or Internet to run. These are **unsigned personal builds**, so Windows SmartScreen may warn about an unknown publisher. Do not disable Defender or other security protections broadly.
+
+## Build from source instead
+
+Use a **Windows 10/11 x64 PC** with Internet access, enough free disk space for Node dependencies and Electron, and working graphics drivers.
+
+1. Install **Node.js 22.12 or newer** (current LTS recommended). Node includes npm. Close and reopen any terminals after installation.
+2. Download the source ZIP from [the Arena branch](https://github.com/Raaniscool/VFXAI/tree/arena/8b465cbe-vfxai) using **Code → Download ZIP**. Extract it into a writable folder, such as `Documents\VFXAI`; do not launch files from inside the ZIP.
+3. Double-click **`BUILD_WINDOWS.bat`** in the extracted folder. It installs locked dependencies, runs tests, builds the renderer, and creates both Windows targets. The first build needs Internet for Electron and packaging downloads.
+4. On success, open the `release` folder. The expected outputs are:
 
    ```text
    release\VFXAI-0.2.0-x64-setup.exe
    release\VFXAI-0.2.0-x64-portable.exe
    ```
 
-6. Choose one:
-   - **Installer:** double-click `VFXAI-0.2.0-x64-setup.exe`. Follow the installer, then launch **VFXAI** from the Start menu or desktop shortcut. It installs per user, not as an administrator/system service.
-   - **Portable:** double-click `VFXAI-0.2.0-x64-portable.exe`. No installation wizard. It extracts its bundled runtime temporarily when launched and still uses a normal per-user application-data folder; “portable” does not mean settings never touch AppData.
+5. Double-click either EXE as described above. Do not run installers copied from other sources.
 
-**Running either built EXE does not require Node.js, npm, Vite, a web server, a browser window, an Internet connection, or a paid AI service.** Electron includes its own runtime. Node and downloads are build/development prerequisites only.
-
-These are **unsigned personal builds**, not Microsoft-certified software. Windows SmartScreen or security tools may show an unknown-publisher warning. Only run source/builds you trust. Do not disable Defender, certificate validation, or other system protections to make a build work. Code-signing and auto-update infrastructure are outside this conversion.
+Running a successfully built/packaged EXE requires no Node, manual web server, browser window, Internet, or paid AI service.
 
 ## Simplest development launch
 
@@ -57,13 +60,9 @@ For a quick source-based **offline-style desktop startup**, `npm run build` foll
 
 `desktop:build` on Windows creates `release\win-unpacked\VFXAI.exe` plus supporting files. To move that unpacked build you must copy **the entire `win-unpacked` folder**, not just its `.exe`. Prefer the installer or portable artifact for distribution. Linux `desktop:build` is not a Windows package. Build Windows distributions on Windows; cross-building may require Wine and is not the supported recipe here.
 
-## Getting an EXE from GitHub Actions
+## Artifact lifecycle
 
-The **Windows desktop** workflow is in `.github/workflows/windows-desktop.yml`. It does not publish a release or modify branches. The source is already on [`arena/8b465cbe-vfxai`](https://github.com/Raaniscool/VFXAI/tree/arena/8b465cbe-vfxai); no merge is required.
-
-The first run [failed at the real source-entry Electron startup check](https://github.com/Raaniscool/VFXAI/actions/runs/38687347082), before installer packaging, so it has **no `VFXAI-Windows-x64` artifact to download**. We are instrumenting that startup failure and will retry. After a successful run, open **Actions → Windows desktop**, select its `arena/8b465cbe-vfxai` run, then download **`VFXAI-Windows-x64`**. Extract the ZIP and run either EXE described above. Artifact retention is 30 days; GitHub generally requires you to be signed in for artifact downloads. A failed run is not a verified executable.
-
-There is no honest direct installer URL to provide until that workflow or your Windows build succeeds. The workflow's manual Run button is available only if GitHub exposes it (typically after the workflow is present on the default branch); publishing a push to the current branch is sufficient and avoids changing branch strategy. No automatic GitHub Release, signing, update server, or upload to an external host is configured.
+The **`VFXAI-Windows-x64`** ZIP is attached to the [successful Actions run](https://github.com/Raaniscool/VFXAI/actions/runs/38688547095). The direct [artifact ZIP link](https://api.github.com/repos/Raaniscool/VFXAI/actions/artifacts/11951170634/zip) may require you to sign in. GitHub retains it for 30 days. It is a CI artifact, **not** a permanent GitHub Release; no release or code-signing certificate is configured.
 
 ## What remains the same
 
@@ -99,4 +98,4 @@ The Designer remains an explicit unavailable interface. There is no trained neur
 - **Node dependencies after an update:** run `npm ci`. Do not copy a Linux `node_modules` folder to Windows.
 - **Large download/application:** Electron bundles Chromium and Node. This is intentionally a native desktop shell around the reusable web renderer, not a rewrite into a smaller native graphics engine. Memory/startup performance on the target PC is not yet benchmarked.
 
-Before treating a Windows distribution as verified, run it on a real PC: launch with no Vite server, orbit and play/seek the effect, load a good and bad JSON plan, save and cancel native dialogs, reload, close/relaunch, open a second instance, and uninstall the installer build. Also verify the portable EXE on a machine without Node installed. These Windows-specific checks have not been performed in Arena.
+The CI runner has verified source-entry Electron startup, bundled rendering, and packaged executable startup. For your PC, still check launching with no Vite server, orbit/play/seek, load valid and invalid JSON plans, save/cancel native dialogs, reload, close/relaunch, open a second instance, and uninstall the installer build. The user-machine dialog, installation, and performance checks have not been performed.

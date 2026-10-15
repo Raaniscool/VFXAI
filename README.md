@@ -4,23 +4,27 @@ A Windows desktop foundation for **real, procedurally constructed VFX**. The exi
 
 **Version 0.2.0: desktop conversion of Milestone 1.** The Designer is still explicitly unavailable. No trained neural network, prompt interpretation, model training, property editor or Roblox exporter has been added.
 
-> **Build status:** desktop source is published on the [Arena branch](https://github.com/Raaniscool/VFXAI/tree/arena/8b465cbe-vfxai), but **no compiled Windows `.exe` is available yet**. The first Windows GitHub Actions run failed during real Electron startup, before packaging or artifact upload. We are investigating; the run is [here](https://github.com/Raaniscool/VFXAI/actions/runs/38687347082). See [Windows build instructions and status](docs/windows-desktop.md).
+> **Prebuilt Windows app:** a successful Windows build, including native Electron startup tests for both the source entry and packaged executable, is available from the [successful GitHub Actions run](https://github.com/Raaniscool/VFXAI/actions/runs/38688547095). Download its **`VFXAI-Windows-x64`** artifact (ZIP; sign in to GitHub if prompted). The artifact is retained for 30 days. This is an Actions download—not a permanent GitHub Release. See [Windows instructions](docs/windows-desktop.md).
 
-## Get a normal Windows application
+## Download the prebuilt Windows application (easiest)
 
-1. On a Windows 10/11 **x64** PC, install **Node.js 22.12+** (current LTS recommended).
-2. Extract the delivered **`VFXAI-0.2.0-source.zip`**, or use this repository's current workspace source. Don't run from inside a ZIP.
-3. Double-click **`BUILD_WINDOWS.bat`**. It installs locked dependencies, runs the automated tests and builds both Windows targets. Internet is needed for the first build.
-4. When it finishes, open either:
+1. Open the [successful Windows desktop build](https://github.com/Raaniscool/VFXAI/actions/runs/38688547095).
+2. Under **Artifacts**, click **`VFXAI-Windows-x64`** to download the ZIP. Sign in to GitHub if prompted. The artifact is about 212 MiB and is retained for 30 days.
+3. In Downloads, right-click the ZIP and choose **Extract All**.
+4. To run without installing, double-click **`VFXAI-0.2.0-x64-portable.exe`**. Or run **`VFXAI-0.2.0-x64-setup.exe`** and then start VFXAI from the Start menu/desktop shortcut.
 
-   ```text
-   release\VFXAI-0.2.0-x64-setup.exe      ← installer, Start menu + desktop shortcut
-   release\VFXAI-0.2.0-x64-portable.exe   ← double-click without installing
-   ```
+The packaged app includes Electron and loads its bundled files directly—**no Node.js, server, browser, or Internet connection is needed to run it**. These are unsigned personal builds; Windows SmartScreen may show an unknown-publisher warning. Don't disable security protections broadly.
 
-**The resulting EXEs include Electron and load bundled files directly. End users do not need Node.js, a browser, Vite, a manually started server, Internet, an account or a paid AI service to run them.** These are unsigned personal builds; only run source/builds you trust. No signing or auto-update service is configured.
+## Build from source (optional)
 
-The source is now published at [Raaniscool/VFXAI on the Arena branch](https://github.com/Raaniscool/VFXAI/tree/arena/8b465cbe-vfxai). A Windows runner installed dependencies and passed tests/build, but its first real Electron startup smoke failed, so packaging was skipped and there is **no downloadable EXE artifact yet**. The failing run is [visible here](https://github.com/Raaniscool/VFXAI/actions/runs/38687347082); the browser and Windows/Ubuntu foundation jobs passed. Full launch instructions and troubleshooting are in [docs/windows-desktop.md](docs/windows-desktop.md).
+On Windows 10/11 x64, install Node.js 22.12+, download the source ZIP from [the Arena branch](https://github.com/Raaniscool/VFXAI/tree/arena/8b465cbe-vfxai) (**Code → Download ZIP**), and extract it to a writable folder. Double-click **`BUILD_WINDOWS.bat`**. It installs locked dependencies, runs tests and builds the installer plus portable EXE. After a successful build they appear at:
+
+```text
+release\VFXAI-0.2.0-x64-setup.exe
+release\VFXAI-0.2.0-x64-portable.exe
+```
+
+`START_VFXAI.bat` launches the development desktop and manages its server automatically; it is not needed to run the prebuilt app.
 
 ## Desktop development
 
@@ -76,18 +80,18 @@ Orbit, zoom, pause/replay, speed, looping, exact-time seeking, grid toggle and c
 
 ## Tests and limitations
 
-Verified in Arena for the desktop conversion:
+- **23/23 Node test groups pass** locally, including schema/engine/verification behavior, desktop policies, standalone validator parity and mocked shell wiring.
+- **Browser WebGL smoke passes** on development and production builds, including effect pixels, playback/seek, JSON validation/save, responsive layout, reduced motion, no-WebGL handling and the strict desktop-style CSP.
+- **Production build passes.** Three.js emits a non-fatal >500 KB chunk warning (about 137 KB gzipped JavaScript).
+- **Windows GitHub Actions passed** on a real Windows runner: unit tests/build; source-entry Electron launch and bundled UI smoke; Windows x64 installer/portable packaging; and a second real-Electron smoke against the packaged `VFXAI.exe`. The automated smoke checked the viewport/WebGL effect, sandbox, plan validation, JSON save wiring and CSP. Download **`VFXAI-Windows-x64`** from the [successful run](https://github.com/Raaniscool/VFXAI/actions/runs/38688547095).
+- The Windows artifact is unsigned. Native Save As dialogs, installation/uninstallation and performance on **your** PC still need manual acceptance. Windows SmartScreen may warn about an unknown publisher.
+- Arena itself cannot fetch Electron's runtime reliably and its local Windows-package attempt hit certificate verification. That does not invalidate the successful Windows Actions build; use the artifact above or build on Windows.
 
-- **23/23 Node test groups pass:** original schema/engine/verification checks plus desktop policies, standalone validator equivalence and shell wiring tests using explicit Electron doubles.
-- **WebGL browser smoke passes** on development and production builds: actual canvas pixels, draw counts, playback, seek, grid/camera, JSON, valid/invalid/oversized input, download, mobile layout, reduced motion and no-WebGL fallback. Production uses the strict script CSP needed by the desktop shell.
-- **Production web build passes.** Three.js still produces a non-fatal >500 KB chunk warning (about 137 KB gzipped JavaScript after build-time schema compilation).
-- **Native desktop smoke has not passed yet.** In Arena, Electron could not download and a local Windows-package attempt stopped at certificate verification. The first published Windows Actions run also failed during source-entry Electron startup, before packaging; the packaged app and downloadable artifact were therefore never produced. No Windows installer or native launch is verified. The failing run is [linked above](https://github.com/Raaniscool/VFXAI/actions/runs/38687347082).
+The shell wiring unit tests are mocks, but they are separate from—and do not replace—the successful real-Electron Windows smoke tests.
 
-`tests/desktop-smoke.mjs` and `.github/workflows/windows-desktop.yml` run real Electron checks; they do not substitute mocks or skip native failures. I am adding diagnostic capture to investigate the CI startup failure. The shell wiring unit tests **are mocks**, not native-runtime proof.
+The sandbox has two CPUs and about 4 GB RAM. Electron adds Chromium/Node disk and memory overhead. WebGL2 is needed via supported hardware or software rendering; performance and graphics drivers vary by PC.
 
-The sandbox has two CPUs and about 4 GB RAM, with no Windows environment. Electron adds Chromium/Node disk and memory overhead. WebGL2 is needed, through supported hardware or software rendering. Target-PC performance, native dialogs, installation and uninstallation remain to be checked on Windows.
-
-The current dependency audit reports moderate **development/packaging-tool** transitive advisories; `npm audit --omit=dev` reports zero. The packaged app does not ship those build-tool `node_modules`. Review tooling updates before broad distribution; don't force breaking dependency upgrades or disable security checks to package.
+The full npm audit has moderate **development/packaging-tool** transitive advisories; `npm audit --omit=dev` reports zero. Build tooling is not shipped as runtime `node_modules`.
 
 ### Optional browser tests
 
@@ -98,7 +102,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-Linux may need `npx playwright install --with-deps chromium`. Running VFXAI does not require Playwright. `VFX_TEST_URL` selects a production preview, and `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` selects an existing test browser. In Arena, the live web preview is a renderer demonstration, **not a streamed Windows desktop session**.
+Linux may need `npx playwright install --with-deps chromium`. Running VFXAI does not require Playwright. `VFX_TEST_URL` selects a production preview, and `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` selects an existing test browser. The live Arena preview is a renderer demonstration, **not a streamed Windows desktop session**.
 
 ## Architecture
 
@@ -131,4 +135,4 @@ Structural checks are **not** artistic-quality evaluation, Roblox compatibility 
 
 ## Repository / publishing status
 
-The source and documentation are committed and pushed to **`arena/8b465cbe-vfxai`** (commit `a0626b9`). No branch switch, merge, PR, or GitHub Release was made. The first Windows Actions attempt failed at the Electron startup smoke; no artifact was published. Packaging scripts explicitly use `--publish never`, and the workflow only uploads installers after successful startup checks.
+The tested source is on **`arena/8b465cbe-vfxai`**. The successful Windows build is an Actions artifact, not a permanent GitHub Release, and expires after 30 days. No branch switch, merge, PR, or release was made. Packaging scripts explicitly use `--publish never`; the workflow uploads installers only after native smoke tests pass.
