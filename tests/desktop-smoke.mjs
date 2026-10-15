@@ -8,7 +8,13 @@ import plan from "../examples/lightning-burst.vfx.json" with { type: "json" };
 
 // Real Electron, bundled UI, no Vite server. On Linux use xvfb-run.
 // This test must fail (not silently skip) if Electron/download/display is unavailable.
-const root = fileURLToPath(new URL("../", import.meta.url));
+// Normalize the root so a Windows path never ends in a backslash when Playwright shell-quotes Electron's app argument.
+const root = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
+assert.equal(
+  root.endsWith(path.sep),
+  false,
+  "Electron app path must not end in a separator when passed to Playwright",
+);
 const executable = process.env.VFXAI_DESKTOP_EXECUTABLE;
 const artifactsDir = path.join(root, ".artifacts");
 const diagnosticFile = path.join(
