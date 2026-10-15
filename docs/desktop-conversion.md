@@ -18,7 +18,7 @@
 - Electron-builder 26.15.3 ASAR configuration with Windows x64 NSIS and portable targets; explicit output names, narrow file inclusion, unsigned personal-build settings, and `--publish never` in packaging scripts.
 - `START_VFXAI.bat` and `BUILD_WINDOWS.bat`, with Node/path checks, spaces-safe working-directory handling, dependency setup and visible errors. BAT files have CRLF endings and a `.gitattributes` rule.
 - Automatically owned loopback Vite + Electron development launcher. Closing the app closes the server; startup failure also closes it.
-- Windows CI workflow for tests, source-entry native smoke, packaging, packaged-EXE native smoke and downloadable artifacts **after successful publication/run**. The original foundation workflow remains intact.
+- Windows CI workflow for tests, source-entry native smoke, packaging, packaged-EXE native smoke and downloadable artifacts only after all native checks pass. The original foundation workflow remains intact; first published run failed at source-entry Electron startup, so packaging did not run.
 - A complete source ZIP, excluding binaries/dependencies/credentials, provided as the practical alternative to an unbuildable-in-Arena executable.
 
 ## Tests actually executed
@@ -39,11 +39,11 @@
 | `npm run desktop:dev`                                   | Vite starts and cleans up after Electron-download failure; native window cannot launch in this environment                                                                                                                                                            |
 | `npm run dist:win:portable`                             | Renderer builds, electron-builder accepts configuration and reaches `platform=win32 arch=x64 electron=44.7.2`; download then fails with `unable to verify the first certificate`. **No executable produced**                                                          |
 | Windows installer / native dialogs / actual Windows GPU | **Not executed**, no Windows runtime available                                                                                                                                                                                                                        |
-| Remote GitHub Actions                                   | **Not executed**, source not pushed                                                                                                                                                                                                                                   |
+| Remote GitHub Actions                                   | Foundation Linux, Windows and browser jobs passed; Windows desktop job failed in source-entry Electron startup before packaging/artifact upload. [Run details](https://github.com/Raaniscool/VFXAI/actions/runs/38687347082); no Windows app artifact exists yet      |
 
 The browser test used the previously extracted Chromium/SwiftShader test tools from the foundation work, not Electron masquerading as a browser test. Its success establishes renderer behavior, **not native Electron or Windows packaging success**. The two mocked shell-wiring tests validate bootstrap/protocol/download policy but are likewise not native-startup proof.
 
-Arena only permits a narrow set of outbound hosts. Electron's GitHub download redirects to a release/CDN host that is not reachable here; the builder also hit a certificate error. TLS/certificate checks were not disabled. A normal Windows developer machine or Windows GitHub runner is the practical next execution environment.
+Arena only permits a narrow set of outbound hosts. Electron's GitHub download redirects to a release/CDN host that is not reachable here; the builder also hit a certificate error. TLS/certificate checks were not disabled. The first Windows GitHub runner did launch the native smoke step but failed before packaging; its logs could not be retrieved from this environment, so the next run adds persistent startup diagnostics. No native pass is claimed.
 
 ## Files added for this conversion
 
@@ -72,15 +72,13 @@ Generated source archive: `release/VFXAI-0.2.0-source.zip`, intentionally ignore
 
 ## Where to get/run Windows software
 
-**There is no compiled EXE in this delivery and no remote installer URL yet.** The attached source ZIP is the available download. On Windows, extract it, install Node 22.12+, and double-click **`BUILD_WINDOWS.bat`**. Expected successful outputs:
+**There is no compiled EXE in this delivery and no direct installer URL yet.** The source is published on [the current Arena branch](https://github.com/Raaniscool/VFXAI/tree/arena/8b465cbe-vfxai). The first Windows Actions run [failed at Electron startup](https://github.com/Raaniscool/VFXAI/actions/runs/38687347082), before producing a Windows executable artifact. On a Windows PC, install Node 22.12+, extract the source ZIP (or clone the branch), and double-click **`BUILD_WINDOWS.bat`**. Expected successful outputs:
 
 - `release\VFXAI-0.2.0-x64-setup.exe`: run installer, launch via Start menu/desktop shortcut.
 - `release\VFXAI-0.2.0-x64-portable.exe`: double-click to launch directly.
 
-After a successful build, neither EXE needs a separately started server or Node installation on the end-user machine. They are unsigned builds; source/runtime verification on Windows is still required. Alternatively publish the current branch and download **`VFXAI-Windows-x64`** from a successful **Windows desktop** Actions run. Full steps are in [windows-desktop.md](windows-desktop.md).
+After a successful build, neither EXE needs a separately started server or Node installation on the end-user machine. They are unsigned builds; source/runtime verification on Windows is still required. Once the Windows desktop workflow passes, download **`VFXAI-Windows-x64`** from that successful run. The first run did not create an artifact. Full steps are in [windows-desktop.md](windows-desktop.md).
 
 ## Repository / next action
 
-**Workspace changes only. No commit, push, PR, merge, release or remote artifact was created.** Branch strategy and origin are unchanged. Packaging scripts and CI do not publish a GitHub Release.
-
-Next action is to build and exercise this desktop conversion on Windows, or publish and inspect its Windows CI run. Complete manual installer/portable/native-dialog checks before calling the desktop distribution verified. No prompt interpretation, training, export, or later AI milestone is authorized or implemented by this conversion.
+**Source and docs are committed and pushed to `arena/8b465cbe-vfxai` at `a0626b9`; no PR, merge, or GitHub Release was created.** The first Windows desktop Actions run failed at Electron startup before packaging, so no remote artifact exists. Packaging scripts do not publish GitHub Releases. We are adding diagnostic capture and will rerun the real Windows test; complete manual installer/portable/native-dialog checks before calling the desktop distribution verified. No prompt interpretation, training, export, or later AI milestone is authorized or implemented by this conversion.

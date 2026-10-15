@@ -4,7 +4,7 @@ A Windows desktop foundation for **real, procedurally constructed VFX**. The exi
 
 **Version 0.2.0: desktop conversion of Milestone 1.** The Designer is still explicitly unavailable. No trained neural network, prompt interpretation, model training, property editor or Roblox exporter has been added.
 
-> **Build status:** desktop source and packaging are implemented, but **no compiled Windows `.exe` is attached or remotely published**. Arena's restricted network blocked Electron runtime/downloads, so native Electron startup and Windows installation could not be verified here. See [Windows build instructions and status](docs/windows-desktop.md).
+> **Build status:** desktop source is published on the [Arena branch](https://github.com/Raaniscool/VFXAI/tree/arena/8b465cbe-vfxai), but **no compiled Windows `.exe` is available yet**. The first Windows GitHub Actions run failed during real Electron startup, before packaging or artifact upload. We are investigating; the run is [here](https://github.com/Raaniscool/VFXAI/actions/runs/38687347082). See [Windows build instructions and status](docs/windows-desktop.md).
 
 ## Get a normal Windows application
 
@@ -20,7 +20,7 @@ A Windows desktop foundation for **real, procedurally constructed VFX**. The exi
 
 **The resulting EXEs include Electron and load bundled files directly. End users do not need Node.js, a browser, Vite, a manually started server, Internet, an account or a paid AI service to run them.** These are unsigned personal builds; only run source/builds you trust. No signing or auto-update service is configured.
 
-Alternatively, after this source is published, the new **Windows desktop** GitHub Actions workflow can produce downloadable artifacts. Look under the successful run's **`VFXAI-Windows-x64`** artifact. **No such run or artifact has been created by this Arena delivery.** Full details, troubleshooting, security and manual Windows acceptance steps are in [docs/windows-desktop.md](docs/windows-desktop.md).
+The source is now published at [Raaniscool/VFXAI on the Arena branch](https://github.com/Raaniscool/VFXAI/tree/arena/8b465cbe-vfxai). A Windows runner installed dependencies and passed tests/build, but its first real Electron startup smoke failed, so packaging was skipped and there is **no downloadable EXE artifact yet**. The failing run is [visible here](https://github.com/Raaniscool/VFXAI/actions/runs/38687347082); the browser and Windows/Ubuntu foundation jobs passed. Full launch instructions and troubleshooting are in [docs/windows-desktop.md](docs/windows-desktop.md).
 
 ## Desktop development
 
@@ -81,9 +81,9 @@ Verified in Arena for the desktop conversion:
 - **23/23 Node test groups pass:** original schema/engine/verification checks plus desktop policies, standalone validator equivalence and shell wiring tests using explicit Electron doubles.
 - **WebGL browser smoke passes** on development and production builds: actual canvas pixels, draw counts, playback, seek, grid/camera, JSON, valid/invalid/oversized input, download, mobile layout, reduced motion and no-WebGL fallback. Production uses the strict script CSP needed by the desktop shell.
 - **Production web build passes.** Three.js still produces a non-fatal >500 KB chunk warning (about 137 KB gzipped JavaScript after build-time schema compilation).
-- **Native desktop smoke was attempted but blocked:** the Electron binary could not download in Arena. Windows portable packaging parsed the configuration and reached runtime packaging, then failed on download/certificate verification. No EXE was produced; no Windows test passed is claimed.
+- **Native desktop smoke has not passed yet.** In Arena, Electron could not download and a local Windows-package attempt stopped at certificate verification. The first published Windows Actions run also failed during source-entry Electron startup, before packaging; the packaged app and downloadable artifact were therefore never produced. No Windows installer or native launch is verified. The failing run is [linked above](https://github.com/Raaniscool/VFXAI/actions/runs/38687347082).
 
-`tests/desktop-smoke.mjs` and `.github/workflows/windows-desktop.yml` are ready to exercise real source-entry Electron and the packaged Windows executable where downloads and a graphical session are available. They do not silently substitute mocks or skip native failures. The shell wiring unit tests **are mocks**, not native-runtime proof.
+`tests/desktop-smoke.mjs` and `.github/workflows/windows-desktop.yml` run real Electron checks; they do not substitute mocks or skip native failures. I am adding diagnostic capture to investigate the CI startup failure. The shell wiring unit tests **are mocks**, not native-runtime proof.
 
 The sandbox has two CPUs and about 4 GB RAM, with no Windows environment. Electron adds Chromium/Node disk and memory overhead. WebGL2 is needed, through supported hardware or software rendering. Target-PC performance, native dialogs, installation and uninstallation remain to be checked on Windows.
 
@@ -131,4 +131,4 @@ Structural checks are **not** artistic-quality evaluation, Roblox compatibility 
 
 ## Repository / publishing status
 
-Work remains on **`arena/8b465cbe-vfxai`**. Existing foundation work is preserved. No branch switch, merge, commit, push, PR, GitHub Release, or remote CI run was performed for this conversion. Arena workspace saving is not publishing. All packaging scripts explicitly use `--publish never`; the Windows workflow only uploads build artifacts after successful checks.
+The source and documentation are committed and pushed to **`arena/8b465cbe-vfxai`** (commit `a0626b9`). No branch switch, merge, PR, or GitHub Release was made. The first Windows Actions attempt failed at the Electron startup smoke; no artifact was published. Packaging scripts explicitly use `--publish never`, and the workflow only uploads installers after successful startup checks.

@@ -1,7 +1,7 @@
 import { _electron as electron } from "@playwright/test";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
-import { mkdir, readFile, mkdtemp, rm } from "node:fs/promises";
+import { appendFile, mkdir, readFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import plan from "../examples/lightning-burst.vfx.json" with { type: "json" };
@@ -10,6 +10,21 @@ import plan from "../examples/lightning-burst.vfx.json" with { type: "json" };
 // This test must fail (not silently skip) if Electron/download/display is unavailable.
 const root = fileURLToPath(new URL("../", import.meta.url));
 const executable = process.env.VFXAI_DESKTOP_EXECUTABLE;
+const artifactsDir = path.join(root, ".artifacts");
+const diagnosticFile = path.join(
+  artifactsDir,
+  `desktop-smoke-${executable ? "packaged" : "source"}.log`,
+);
+await mkdir(artifactsDir, { recursive: true });
+await appendFile(
+  diagnosticFile,
+  `\n--- ${new Date().toISOString()} ${process.platform} ${process.version} ---\n`,
+);
+async function logStep(message) {
+  const line = `[desktop-smoke] ${message}`;
+  console.log(line);
+  await appendFile(diagnosticFile, `${line}\n`);
+}
 const profile = await mkdtemp(path.join(tmpdir(), "vfxai-desktop-test-"));
 let desktop;
 const errors = [];
@@ -17,6 +32,9 @@ try {
   const env = { ...process.env };
   delete env.ELECTRON_RUN_AS_NODE;
   delete env.VFXAI_DEV_URL;
+  await logStep(
+    `launching ${executable ? `packaged executable ${executable}` : `source entry ${root}`} with profile ${profile}`,
+  );
   desktop = await electron.launch({
     executablePath: executable || undefined,
     args: [
@@ -30,12 +48,15 @@ try {
     env,
     timeout: 60000,
   });
+  await logStep("Electron debugging connections established");
   const page = await desktop.firstWindow();
+  await logStep(`main window created at ${page.url()}`);
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
   await page.locator("#viewport canvas").waitFor();
+  await logStep(`renderer canvas ready at ${page.url()}`);
   assert.equal(page.url(), "vfxai://app/index.html");
   await page.waitForFunction(
     () => document.querySelector("#time").textContent !== "0.00 / 1.50 s",
@@ -94,13 +115,11 @@ try {
   modified.name = "Desktop smoke";
   modified.seed = 99;
   const upload = (value) =>
-    page
-      .locator("#file")
-      .setInputFiles({
-        name: "test.json",
-        mimeType: "application/json",
-        buffer: Buffer.from(JSON.stringify(value)),
-      });
+    page.locator("#file").setInputFiles({
+      name: "test.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(value)),
+    });
   await upload(modified);
   await page.waitForFunction(
     () =>
@@ -146,9 +165,14 @@ try {
   await mkdir(".artifacts", { recursive: true });
   await page.screenshot({ path: ".artifacts/desktop-electron.png" });
   assert.deepEqual(errors, []);
-  console.log(
+  await logStep(
     `PASS: real Electron ${executable ? "packaged executable" : "source entry"}, bundled protocol without server, WebGL pixels, sandbox, playback/seek, plan validation, save/download, strict CSP.`,
   );
+} catch (error) {
+  const details =
+    error instanceof Error ? (error.stack ?? error.message) : String(error);
+  await logStep(`FAILED: ${details}`);
+  throw error;
 } finally {
   await desktop?.close();
   await rm(profile, { recursive: true, force: true });

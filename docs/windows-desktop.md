@@ -2,9 +2,9 @@
 
 ## Current delivery status (read first)
 
-The Electron source conversion and Windows packaging configuration are implemented. **There is no compiled Windows installer or portable `.exe` attached to this delivery.** Arena is Linux; Electron's runtime download failed in its restricted network, and electron-builder's Windows packaging attempt failed with a certificate verification error before it could create an executable. No Windows installation, native Electron startup, or GPU behavior on Windows has been verified here.
+The Electron source conversion and Windows packaging configuration are implemented. **There is no compiled Windows installer or portable `.exe` available yet.** Arena's local runtime and package downloads were blocked, and the first published Windows Actions run failed during real Electron startup before packaging. No Windows installer/portable artifact was produced; Windows installation and GPU behavior are not verified.
 
-The accompanying **`VFXAI-0.2.0-source.zip` is complete source, not an installed application**. Extract it first. You can also use the current repository workspace source. No commit/push or remote build was performed, so there is **not yet a GitHub Actions download** for this conversion.
+The **`VFXAI-0.2.0-source.zip` is complete source, not an installed application**. Extract it first. The source is published on [the Arena branch](https://github.com/Raaniscool/VFXAI/tree/arena/8b465cbe-vfxai). The failed [Windows Actions run](https://github.com/Raaniscool/VFXAI/actions/runs/38687347082) did not publish a download artifact. The source can still be built on Windows using the steps below.
 
 ## Simplest way to get a real Windows program from source
 
@@ -57,15 +57,11 @@ For a quick source-based **offline-style desktop startup**, `npm run build` foll
 
 `desktop:build` on Windows creates `release\win-unpacked\VFXAI.exe` plus supporting files. To move that unpacked build you must copy **the entire `win-unpacked` folder**, not just its `.exe`. Prefer the installer or portable artifact for distribution. Linux `desktop:build` is not a Windows package. Build Windows distributions on Windows; cross-building may require Wine and is not the supported recipe here.
 
-## Getting an EXE from GitHub Actions (after publication)
+## Getting an EXE from GitHub Actions
 
-A new **Windows desktop** workflow is in `.github/workflows/windows-desktop.yml`. It does not publish a release or modify branches.
+The **Windows desktop** workflow is in `.github/workflows/windows-desktop.yml`. It does not publish a release or modify branches. The source is already on [`arena/8b465cbe-vfxai`](https://github.com/Raaniscool/VFXAI/tree/arena/8b465cbe-vfxai); no merge is required.
 
-1. Publish the workspace changes to the existing session branch using the normal Arena/Git workflow. **This delivery did not do that for you.** Keep `arena/8b465cbe-vfxai`; no merge is needed to trigger its `push` workflow.
-2. In the repository, open **Actions → Windows desktop** and select the run for that branch/commit.
-3. The Windows runner installs dependencies, runs tests, exercises source-entry Electron startup, builds installer/portable targets, then exercises the **packaged** `release\win-unpacked\VFXAI.exe`.
-4. Only after all those steps pass, download the run's **`VFXAI-Windows-x64`** artifact. GitHub generally requires you to be signed in for artifacts.
-5. Extract its ZIP and run either EXE described above. Artifact retention is configured for 30 days. A failed run may have diagnostics but does **not** constitute a verified EXE release.
+The first run [failed at the real source-entry Electron startup check](https://github.com/Raaniscool/VFXAI/actions/runs/38687347082), before installer packaging, so it has **no `VFXAI-Windows-x64` artifact to download**. We are instrumenting that startup failure and will retry. After a successful run, open **Actions → Windows desktop**, select its `arena/8b465cbe-vfxai` run, then download **`VFXAI-Windows-x64`**. Extract the ZIP and run either EXE described above. Artifact retention is 30 days; GitHub generally requires you to be signed in for artifact downloads. A failed run is not a verified executable.
 
 There is no honest direct installer URL to provide until that workflow or your Windows build succeeds. The workflow's manual Run button is available only if GitHub exposes it (typically after the workflow is present on the default branch); publishing a push to the current branch is sufficient and avoids changing branch strategy. No automatic GitHub Release, signing, update server, or upload to an external host is configured.
 
