@@ -1,0 +1,280 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:vfx-forge:plan:1.0",
+  "title": "VFX Forge construction plan 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "name",
+    "effectType",
+    "duration",
+    "seed",
+    "constraints",
+    "components"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0",
+      "default": "1.0"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "default": "Untitled burst"
+    },
+    "effectType": {
+      "const": "radial-burst",
+      "default": "radial-burst"
+    },
+    "duration": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 10,
+      "default": 1.5
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "default": 42
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxObjects", "maxParticles"],
+      "properties": {
+        "maxObjects": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256,
+          "default": 64
+        },
+        "maxParticles": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 512,
+          "default": 128
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "color",
+          "position",
+          "start",
+          "duration",
+          "properties"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,39}$"
+          },
+          "type": {
+            "enum": ["core", "ring", "lightning", "particles"]
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$",
+            "default": "#529dff"
+          },
+          "position": {
+            "$ref": "#/definitions/vector",
+            "default": [0, 0, 0]
+          },
+          "start": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10,
+            "default": 0
+          },
+          "duration": {
+            "type": "number",
+            "minimum": 0.05,
+            "maximum": 10,
+            "default": 1
+          },
+          "properties": {
+            "type": "object"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "core"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "properties": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["radius"],
+                  "properties": {
+                    "radius": {
+                      "type": "number",
+                      "minimum": 0.05,
+                      "maximum": 5,
+                      "default": 0.65
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "ring"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "properties": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["radius", "endRadius", "thickness"],
+                  "properties": {
+                    "radius": {
+                      "type": "number",
+                      "minimum": 0.1,
+                      "maximum": 10,
+                      "default": 0.6
+                    },
+                    "endRadius": {
+                      "type": "number",
+                      "minimum": 0.1,
+                      "maximum": 20,
+                      "default": 5.6
+                    },
+                    "thickness": {
+                      "type": "number",
+                      "minimum": 0.01,
+                      "maximum": 0.5,
+                      "default": 0.055
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "lightning"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "properties": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["count", "length", "segments", "jitter"],
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 32,
+                      "default": 8
+                    },
+                    "length": {
+                      "type": "number",
+                      "minimum": 0.1,
+                      "maximum": 20,
+                      "default": 4.5
+                    },
+                    "segments": {
+                      "type": "integer",
+                      "minimum": 2,
+                      "maximum": 32,
+                      "default": 12
+                    },
+                    "jitter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "default": 0.24
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "particles"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "properties": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["count", "speed", "size", "gravity"],
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 512,
+                      "default": 96
+                    },
+                    "speed": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 20,
+                      "default": 4.2
+                    },
+                    "size": {
+                      "type": "number",
+                      "minimum": 0.01,
+                      "maximum": 0.5,
+                      "default": 0.065
+                    },
+                    "gravity": {
+                      "type": "number",
+                      "minimum": -20,
+                      "maximum": 20,
+                      "default": 0.65
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "vector": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number",
+        "minimum": -20,
+        "maximum": 20
+      }
+    }
+  }
+}

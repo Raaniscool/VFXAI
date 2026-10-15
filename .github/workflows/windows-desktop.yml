@@ -1,0 +1,46 @@
+name: Windows desktop
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Electron startup and bundled renderer smoke
+        run: npm run test:desktop
+      - name: Build Windows x64 installer and portable app
+        run: npm run dist:win
+      - name: Smoke-test packaged Windows executable
+        run: npm run test:desktop
+        env:
+          VFXAI_DESKTOP_EXECUTABLE: ${{ github.workspace }}\release\win-unpacked\VFXAI.exe
+      - name: Downloadable Windows programs
+        uses: actions/upload-artifact@v4
+        with:
+          name: VFXAI-Windows-x64
+          path: |
+            release/VFXAI-*-x64-setup.exe
+            release/VFXAI-*-x64-portable.exe
+          if-no-files-found: error
+          retention-days: 30
+      - name: Desktop diagnostics
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: VFXAI-desktop-diagnostics
+          path: .artifacts/
+          include-hidden-files: true
+          if-no-files-found: ignore

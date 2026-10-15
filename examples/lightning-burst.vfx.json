@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "1.0",
+  "name": "Azure detonation",
+  "effectType": "radial-burst",
+  "duration": 1.5,
+  "seed": 42,
+  "constraints": { "maxObjects": 64, "maxParticles": 128 },
+  "components": [
+    {
+      "id": "core",
+      "type": "core",
+      "color": "#eafaff",
+      "position": [0, 0, 0],
+      "start": 0,
+      "duration": 0.9,
+      "properties": { "radius": 0.65 }
+    },
+    {
+      "id": "arcs",
+      "type": "lightning",
+      "color": "#529dff",
+      "position": [0, 0, 0],
+      "start": 0.04,
+      "duration": 1.1,
+      "properties": {
+        "count": 8,
+        "length": 4.5,
+        "segments": 12,
+        "jitter": 0.24
+      }
+    },
+    {
+      "id": "shockwave-a",
+      "type": "ring",
+      "color": "#65e3ff",
+      "position": [0, 0, 0],
+      "start": 0.05,
+      "duration": 1.15,
+      "properties": { "radius": 0.6, "endRadius": 5.6, "thickness": 0.055 }
+    },
+    {
+      "id": "shockwave-b",
+      "type": "ring",
+      "color": "#4285ff",
+      "position": [0, 0.08, 0],
+      "start": 0.22,
+      "duration": 1.25,
+      "properties": { "radius": 0.4, "endRadius": 4.8, "thickness": 0.035 }
+    },
+    {
+      "id": "sparks",
+      "type": "particles",
+      "color": "#82cfff",
+      "position": [0, 0, 0],
+      "start": 0.08,
+      "duration": 1.42,
+      "properties": {
+        "count": 96,
+        "speed": 4.2,
+        "size": 0.065,
+        "gravity": 0.65
+      }
+    }
+  ]
+}

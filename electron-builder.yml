@@ -1,0 +1,31 @@
+appId: com.vfxai.forge
+productName: VFXAI
+asar: true
+# Renderer libraries are already bundled by Vite. No runtime Node dependencies.
+npmRebuild: false
+directories:
+  output: release
+files:
+  - dist/**/*
+  - desktop/**/*.cjs
+  - package.json
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+  # Unsigned personal builds; do not download signing tools or imply certification.
+  signAndEditExecutable: false
+  artifactName: VFXAI-${version}-${arch}-setup.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: VFXAI
+  uninstallDisplayName: VFXAI
+portable:
+  artifactName: VFXAI-${version}-${arch}-portable.${ext}

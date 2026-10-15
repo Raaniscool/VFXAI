@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.artifacts/
+playwright-report/
+test-results/
+*.log
+.env
+.env.*
+!.env.example
+release/
+# Packager caches/signing material must never be published with source.
+*.pfx
+*.p12

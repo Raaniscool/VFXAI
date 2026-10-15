@@ -1,0 +1,46 @@
+name: Foundation checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  foundation:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Production preview smoke test
+        shell: bash
+        run: |
+          npm run preview > /tmp/vfx-preview.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          node --input-type=module -e 'for (let i=0; i<40; i++) { try { if ((await fetch("http://127.0.0.1:4173")).ok) process.exit(0); } catch {} await new Promise(r=>setTimeout(r,250)); } process.exit(1);'
+          VFX_TEST_URL=http://127.0.0.1:4173 npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-smoke
+          path: .artifacts/
+          include-hidden-files: true
