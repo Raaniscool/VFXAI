@@ -11,3 +11,12 @@ release/
 # Packager caches/signing material must never be published with source.
 *.pfx
 *.p12
+# Local Python environments, caches, datasets, feedback, experiments, and model checkpoints.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.vfxai/

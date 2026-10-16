@@ -1,4 +1,6 @@
-# Milestone 1 delivery report
+# Historical Milestone 1 delivery report (superseded)
+
+> This report describes the earlier manual-plan foundation. The active project has since moved to a Python-backed trainable-model experiment. Any historical branch/Windows-test/publish statements below have not been reverified against the current workspace.
 
 > Historical report for the original foundation. The subsequent desktop conversion is documented in [desktop-conversion.md](desktop-conversion.md); current launch/build instructions are in [windows-desktop.md](windows-desktop.md). Browser-only/native-packaging statements below describe the original delivery, not the current source.
 

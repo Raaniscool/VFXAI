@@ -143,15 +143,18 @@ test("standalone renderer validator matches the Node validator without runtime e
     assert.deepEqual(rendererValidate.errors, validate.errors);
   }
 });
-test("Windows package output and scripts are explicit and never auto-publish", async () => {
-  const config = await readFile("electron-builder.yml", "utf8");
+test("active source workflow is Python-first and does not install or package Electron", async () => {
   const pkg = JSON.parse(await readFile("package.json", "utf8"));
-  assert.equal(pkg.main, "desktop/main.cjs");
-  assert.equal(pkg.scripts["dist:win"].includes("--publish never"), true);
-  assert.equal(pkg.scripts["desktop:dev"], "node scripts/desktop-dev.mjs");
-  assert.match(config, /output: release/);
-  assert.match(config, /target: nsis/);
-  assert.match(config, /target: portable/);
-  assert.match(config, /asar: true/);
-  assert.ok(!pkg.dependencies || Object.keys(pkg.dependencies).length === 0);
+  const requirements = await readFile("requirements.txt", "utf8");
+  const launcher = await readFile("START_VFXAI.bat", "utf8");
+  const scripts = Object.keys(pkg.scripts).join(" ");
+  const dependencies = Object.keys(pkg.devDependencies || {}).join(" ");
+  assert.ok(!/electron|electron-builder|dist:win|desktop:start/.test(scripts));
+  assert.ok(!/electron|electron-builder/.test(dependencies));
+  const dependencyLines = requirements.split(/\r?\n/).filter((line) => line && !line.trim().startsWith("#"));
+  assert.match(dependencyLines.join("\n"), /numpy==/);
+  assert.match(dependencyLines.join("\n"), /jsonschema==/);
+  assert.doesNotMatch(dependencyLines.join("\n"), /torch|cuda|transformers/i);
+  assert.match(launcher, /vfxai\.cli serve/);
+  assert.doesNotMatch(launcher, /electron|dist:win/i);
 });

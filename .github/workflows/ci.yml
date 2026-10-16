@@ -1,4 +1,4 @@
-name: Foundation checks
+name: Source foundation checks
 on:
   push:
   pull_request:
@@ -16,8 +16,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
       - run: npm ci
+      - run: python -m pip install -r requirements.txt
       - run: npm test
+      - run: python -m unittest discover -s tests-python -v
       - run: npm run build
   browser:
     runs-on: ubuntu-latest
@@ -27,17 +34,24 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
       - run: npm ci
+      - run: python -m pip install -r requirements.txt
       - run: npx playwright install --with-deps chromium
       - run: npm run build
-      - name: Production preview smoke test
+      - name: Production browser + local Python API smoke test
         shell: bash
         run: |
-          npm run preview > /tmp/vfx-preview.log 2>&1 &
+          python -m vfxai.cli init --dataset-count 200
+          python -m vfxai.cli serve --port 8765 --no-browser > /tmp/vfx-python.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
-          node --input-type=module -e 'for (let i=0; i<40; i++) { try { if ((await fetch("http://127.0.0.1:4173")).ok) process.exit(0); } catch {} await new Promise(r=>setTimeout(r,250)); } process.exit(1);'
-          VFX_TEST_URL=http://127.0.0.1:4173 npm run test:browser
+          node --input-type=module -e 'for (let i=0; i<80; i++) { try { if ((await fetch("http://127.0.0.1:8765/api/health")).ok) process.exit(0); } catch {} await new Promise(r=>setTimeout(r,250)); } process.exit(1);'
+          VFX_TEST_URL=http://127.0.0.1:8765 npm run test:browser
       - uses: actions/upload-artifact@v4
         if: always()
         with:

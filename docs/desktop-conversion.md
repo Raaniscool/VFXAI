@@ -1,4 +1,6 @@
-# Desktop conversion report — 0.2.0
+# Historical desktop conversion report — 0.2.0 (superseded)
+
+> **Not the active product or workflow.** This report records an earlier Electron experiment. The current project is Python-first and local-browser-based; Electron/EXE/installer commands and results below are historical, inactive, and have not been reverified in the current checkout. Do not use this report as current Windows-test or publishing evidence.
 
 ## Inspection and preserved work
 

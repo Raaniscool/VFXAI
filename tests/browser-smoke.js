@@ -141,6 +141,40 @@ try {
   let text = "";
   for await (const chunk of await download.createReadStream()) text += chunk;
   assert.deepEqual(JSON.parse(text), plan);
+
+  // The browser app uses the same-origin Python API. Its initial checkpoint is
+  // explicitly untrained; a raw prediction is retained without auto-preview.
+  await page.waitForFunction(() => document.querySelector("#dataset-badge").textContent.includes("EXAMPLES"));
+  await page.locator("#ai-prompt").fill("Create a bright cyan branching lightning burst with a compact shape and a brief finish.");
+  await page.locator("#generate").click();
+  await page.locator("#ai-result:not([hidden])").waitFor();
+  assert.match(await page.locator("#ai-checkpoint-label").textContent(), /random weights; untrained/);
+  assert.ok((await page.locator("#ai-category").textContent()).length > 0);
+  assert.ok((await page.locator("#ai-plan-json").inputValue()).length > 20);
+  assert.ok((await page.locator("#ai-raw-output").textContent()).includes("numeric_outputs_normalized"));
+
+  // One short, real UI-launched training run exercises random initialization,
+  // background status, checkpoint persistence, and held-out comparison.
+  await page.locator("#train-epochs").fill("1");
+  await page.locator("#train-batch").fill("32");
+  await page.locator("#train-hidden").selectOption("16");
+  await page.locator("#train-seed").fill("1337");
+  await page.locator("#start-training").click();
+  await page.waitForFunction(() => /COMPLETED|FAILED/.test(document.querySelector("#training-state").textContent), undefined, { timeout: 60000 });
+  assert.match(await page.locator("#training-state").textContent(), /COMPLETED/);
+  await page.waitForFunction(() => document.querySelectorAll("#eval-checkpoint option").length >= 2, undefined, { timeout: 15000 });
+  await page.locator("#evaluate-button").click();
+  await page.locator("#evaluation-result:not([hidden])").waitFor();
+  assert.ok((await page.locator("#evaluation-result").textContent()).includes("Plan-v1 validity"));
+  await page.locator("#compare-button").click();
+  await page.locator("#compare-result:not([hidden])").waitFor();
+  await page.locator("#compare-result .use-comparison").first().click();
+  await page.locator("#feedback-rating").selectOption("poor");
+  await page.locator("#feedback-notes").fill("Browser smoke rating; must not train automatically.");
+  await page.locator("#save-feedback").click();
+  await page.waitForFunction(() => document.querySelector("#feedback-message").textContent.includes("Saved locally"));
+  assert.ok((await page.locator("#feedback-list").textContent()).includes("rating only"));
+
   await page.locator("#loop").uncheck();
   await page.locator("#scrub").evaluate((input) => {
     input.value = "1.499";

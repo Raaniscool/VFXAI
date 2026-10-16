@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import plan from "../examples/lightning-burst.vfx.json" with { type: "json" };
 import { reason } from "../src/organs/reasoner.js";
 import { build, sampleComponent, PlanError } from "../src/organs/builder.js";
@@ -257,9 +258,46 @@ test("Verifier finds missing, extra, duplicate and mismatched components", () =>
   invalid.duration = 0;
   assert.equal(verify(invalid, build(plan)).ok, false);
 });
-test("Designer is explicitly unavailable instead of fake AI", async () => {
-  const result = await designer.design("blue explosion");
+test("Python Designer adapter fails explicitly instead of fabricating a plan", async () => {
+  const result = await designer.design("blue explosion", {
+    checkpointId: "not-used-without-a-server",
+    seed: 1,
+  });
   assert.equal(result.ok, false);
   assert.equal(result.plan, null);
-  assert.equal(result.issues[0].code, "DESIGNER_UNAVAILABLE");
+  assert.equal(result.prediction, null);
+  assert.equal(result.issues[0].code, "LOCAL_API_UNAVAILABLE");
+  assert.match(result.issues[0].message, /Local Python Designer is unavailable/);
+});
+test("training launcher consumes its internal /nopause switch before forwarding CLI args", () => {
+  const source = readFileSync(new URL("../TRAIN_VFXAI.bat", import.meta.url), "utf8");
+  const command = source.split(/\r?\n/).find((line) => /^python -m vfxai\.cli train /i.test(line));
+  assert.match(source, /if \/i "%~1"=="\/nopause"/i);
+  assert.match(source, /shift/i);
+  assert.ok(command);
+  assert.doesNotMatch(command, /%\*/);
+  assert.match(command, /%1 %2 %3/);
+});
+test("Python Designer bridge preserves an invalid neural candidate without fallback", async () => {
+  const originalFetch = globalThis.fetch;
+  const predicted = {
+    candidate_plan: { schemaVersion: "1.0", components: [] },
+    validation: { ok: false, issues: [{ code: "SCHEMA", path: "/components", message: "No components" }] },
+  };
+  let requestURL;
+  try {
+    globalThis.fetch = async (url, options) => {
+      requestURL = url;
+      assert.equal(options.credentials, "same-origin");
+      return new Response(JSON.stringify(predicted), { status: 200, headers: { "Content-Type": "application/json" } });
+    };
+    const result = await designer.design("test prompt", { checkpointId: "random-seed-1-h16", seed: 7 });
+    assert.equal(requestURL, "/api/generate");
+    assert.equal(result.ok, false);
+    assert.deepEqual(result.plan, predicted.candidate_plan);
+    assert.deepEqual(result.prediction, predicted);
+    assert.equal(result.issues[0].code, "SCHEMA");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
